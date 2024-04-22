@@ -18,7 +18,7 @@ class Dog : public Animal {
 public:
     Dog() : Animal() { }
     void voice() {
-        Animal::voice();
+        //Animal::voice(); - раскомментить для 2-го
         printf("gav\n");
     }
 };
@@ -28,7 +28,7 @@ public:
     Cat()  : Animal() { }
 
     void voice() {
-        Animal::voice();
+        //Animal::voice(); - раскомментить для 2-го
         printf("myau\n");
     }
 };
@@ -37,7 +37,7 @@ class Frog : public Animal {
 public:
     Frog() : Animal() { }
     void voice() {
-        Animal::voice();
+        //Animal::voice(); - раскомментить для 2-го
         printf("kva\n");
     }
 };
