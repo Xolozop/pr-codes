@@ -113,6 +113,7 @@ Rgb** read_bmp (char file_name[], BitmapFileHeader* bmfh, BitmapInfoHeader* bmif
         fread(arr[i], 1, W*sizeof(Rgb) + (W*3)%4, f);
     fclose(f);
     return arr;
+    }
 } 
 
 void write_bmp(char file_name[], Rgb** arr, int H, int W, BitmapFileHeader bmfh, BitmapInfoHeader bmif) {
