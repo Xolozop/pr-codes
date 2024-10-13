@@ -9,14 +9,14 @@ class shipManager
 {
 private:
     int amount;
-    std::vector<std::vector<Ship*>> ships;
+    std::vector<std::vector<Ship>> ships;
 public:
-    shipManager(int amount, std::vector<std::vector<Ship*>> shipArray);
-    void refresh(Ship* ship);
+    shipManager(int amount, std::vector<std::vector<Ship>> shipArray);
+    void refresh(Ship ship);
     int getShipIndex(int len) const;
-    Ship* getShip(int x, int y);
+    Ship& getShip(int x, int y);
     void printShipList() const;
-    void clear();
+    bool isAllShipsDestroyed() const;
 };
 
 #endif

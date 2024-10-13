@@ -21,6 +21,15 @@ Ship::~Ship() {
         delete[] segments;
 }
 
+Ship::Ship(const Ship& other) : length(other.length), orient(other.orient) {
+    delete[] segments;
+    if (other.segments != nullptr) {
+        segments = new segStates[length];
+        for(int i = 0; i < length; i++)
+            segments[i] = other.segments[i];
+    }
+}
+
 
 int Ship::getLength() const {
     return length;

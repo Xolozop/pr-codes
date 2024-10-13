@@ -18,14 +18,14 @@ typedef struct {
 } coords_t;
 
 shipManager createEnemyField(Field* enemyField) {
-    std::vector<std::vector<Ship*>> enemyShips(4);
+    std::vector<std::vector<Ship>> enemyShips(4);
     shipManager manager = shipManager(0, enemyShips);
     int x, y;
     int amount = 0;
     for (int len = 0; len < enemyShips.size(); len++) {
         for (int count = 0; count < (4 - len); count++) {
             char ori = (len%2) ? 'h' : 'v'; 
-            Ship* tmp = new Ship(len+1, ori);
+            Ship tmp(len+1, ori);
             enemyShips[len].push_back(tmp);
             //srand(time(0));
             while (1) {
@@ -49,29 +49,27 @@ int main() {
     Field enemyField(FIELD_SZ, false);
     // change to true to see field and skipi confirmation
     shipManager enemyManager = createEnemyField(&enemyField);
-    enemyManager.printShipList();
     
     Field playersField(FIELD_SZ, true);
-    std::vector<std::vector<Ship*>> playersShips;
+    std::vector<std::vector<Ship>> playersShips;
     shipManager playersManager(0, playersShips);
     int shipAmount = 0;
 
     int len = 4;
-    Ship* ship1 = new Ship(len, 'v');
+    Ship ship1(len, 'v');
     playersManager.refresh(ship1);
     shipAmount++;
 
-    Ship* ship2 = new Ship(len, 'h');
     try {
-        playersManager.refresh(ship1);
+        Ship ship2(len, 'h');
+        playersManager.refresh(ship2);
         shipAmount++;
     } catch (const char* err) {
         std::cerr << TERM_RED << err << TERM_DEF << std::endl;
-        delete ship2;
     }
 
     len = 2;
-    ship2 = new Ship(len, 'h');
+    Ship ship2(len, 'h');
     playersManager.refresh(ship2);
     shipAmount++;
 
@@ -133,7 +131,5 @@ int main() {
     std::cout << "Enemy field: " << std::endl;
     enemyField.printField(false, enemyManager);
 
-    enemyManager.clear();
-    playersManager.clear();
     return 0;
 }

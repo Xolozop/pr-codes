@@ -6,6 +6,7 @@
 #define TERM_DEF "\033[0m"
 #define TERM_UNDERLINE "\033[4m"
 #define TERM_RED "\033[31m"
+#define TERM_YELLOW "\033[33m"
 #define TERM_RED_BG "\033[101m"
 
 Field::Field(int sz, bool isMine) : size{sz}, isMine{isMine} {
@@ -30,15 +31,15 @@ bool Field::confirmData() const{
     return (tolower(ans) != 'n');
 }
 
-void Field::setShip(Ship* ship, char coord_y, int coord_x, int ship_ind) {
+void Field::setShip(Ship& ship, char coord_y, int coord_x, int ship_ind) {
     std::vector<std::vector<int>> copyField = fieldBlocks;
 
     if (!isalpha(coord_y))
             throw "Incorrect first coordinate! Must be a letter! ";
     int x = coord_x - 1;
     int y = (int)coord_y - 96 - 1;
-    int len = ship->getLength();
-    bool ori = ship->isVertical();
+    int len = ship.getLength();
+    bool ori = ship.isVertical();
     int max_x = x+len*ori;
     int max_y = y+len*!ori;
     if ((x < 0) || (max_x > size) || (y < 0) || (max_y > size))
@@ -102,10 +103,10 @@ void Field::printField(bool showPaddings, shipManager& manager) const {
                     std::cout << (isMine ? '~' : '?');
                     break;
                 default:
-                    Ship* ship = manager.getShip(fieldBlocks[x][y]/100, (fieldBlocks[x][y]%100)/10);
-                    int segState = ship->getState(fieldBlocks[x][y]%10);
+                    Ship ship = manager.getShip(fieldBlocks[x][y]/100, (fieldBlocks[x][y]%100)/10);
+                    int segState = ship.getState(fieldBlocks[x][y]%10);
                     if (isMine || segState != segStates::intact) {
-                        ship->printSeg(fieldBlocks[x][y]%10);
+                        ship.printSeg(fieldBlocks[x][y]%10);
                     } else {
                         std::cout << (isMine ? '~' : '?');
                     }
@@ -123,10 +124,9 @@ void Field::shoot(char coord_y, int coord_x, shipManager& manager) {
     if ((x < 0) || (x > size-1) || (y < 0) || (y > size-1))
         throw "Coordinates out of field! ";
 
-    Ship* ship = nullptr;
     if (fieldBlocks[x][y] > 0) {
-        ship = manager.getShip(fieldBlocks[x][y]/100, (fieldBlocks[x][y]%100)/10);
-        if (ship->getState(fieldBlocks[x][y]%10) == segStates::destroyed)
+        Ship ship = manager.getShip(fieldBlocks[x][y]/100, (fieldBlocks[x][y]%100)/10);
+        if (ship.getState(fieldBlocks[x][y]%10) == segStates::destroyed)
             throw "You already destroyed ship at these coordinates! ";
     } else {
         if (fieldBlocks[x][y] == blockStates::shoted)
@@ -144,20 +144,31 @@ void Field::shoot(char coord_y, int coord_x, shipManager& manager) {
         fieldBlocks[x][y] = tmp;
     }
     
-    if (ship) {
-        ship->atack(fieldBlocks[x][y]%10);
-        if (ship->isDestroyed()) {
-            bool ori = ship->isVertical();
+    if (fieldBlocks[x][y] > 0) {
+        Ship& ship = manager.getShip(fieldBlocks[x][y]/100, (fieldBlocks[x][y]%100)/10);
+        ship.atack(fieldBlocks[x][y]%10);
+        if (ship.isDestroyed()) {
+            bool ori = ship.isVertical();
             int x1, y1;
-            for (int i = -1; i < ship->getLength()+1; i++) {
+            for (int i = -1; i < ship.getLength()+1; i++) {
                 x1 = x + i*ori;
                 y1 = y + i*!ori;
                 if ((x1-!ori > -1) && (x1-!ori < size) && (y1-ori > -1) && (y1-ori < size))
                     fieldBlocks[x1-!ori][y1-ori] = blockStates::shoted;
                 if ((x1+!ori > -1) && (x1+!ori < size) && (y1+ori > -1) && (y1+ori < size))
                     fieldBlocks[x1+!ori][y1+ori] = blockStates::shoted;
-                if ((i == -1) || (i == ship->getLength()) && (x1 > -1) && (x1 < size) && (y1 > -1) && (y1 < size))
+                if ((i == -1) || (i == ship.getLength()) && (x1 > -1) && (x1 < size) && (y1 > -1) && (y1 < size))
                     fieldBlocks[x1][y1] = blockStates::shoted;
+            }
+            
+            if (manager.isAllShipsDestroyed()) {
+                if (isMine) {
+                    std::cout << TERM_RED << "\tYOU'RE LOSE..." << TERM_DEF << std::endl;
+                    exit(EXIT_SUCCESS);
+                } else {
+                    std::cout << TERM_YELLOW << "\tYOU'RE WON!!!" << TERM_DEF << std::endl;
+                    exit(EXIT_SUCCESS);
+                }
             }
         }
     } else {

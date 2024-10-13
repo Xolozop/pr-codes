@@ -12,6 +12,7 @@ private:
     segStates* segments = nullptr;
 public:
     Ship(int len, char ori);
+    Ship(const Ship& other);
     ~Ship();
     int getLength() const;
     bool isVertical() const;

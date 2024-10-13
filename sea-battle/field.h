@@ -16,7 +16,7 @@ public:
     Field(int size, bool isMine);
     ~Field();
     void printField(bool showPaddings, shipManager& manager) const;
-    void setShip(Ship* ship, char coord_y, int coord_x, int ship_ind);
+    void setShip(Ship& ship, char coord_y, int coord_x, int ship_ind);
     void shoot(char coord_y, int coord_x, shipManager& manager);
 };
 
