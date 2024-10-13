@@ -2,7 +2,7 @@
 #define FIELD_H
 
 #include "ship.h"
-#include "ship-manager.h"
+#include "shipManager.h"
 
 enum blockStates {unknown=-4, shoted=-3, atGunpoint=-2, padding=-1, empty=0};
 class Field 
@@ -14,6 +14,10 @@ private:
     bool confirmData() const;
 public:
     Field(int size, bool isMine);
+    Field(const Field& other);
+    Field(Field&& other);
+    Field& operator=(const Field& other);
+    Field& operator=(Field&& other);
     ~Field();
     void printField(bool showPaddings, shipManager& manager) const;
     void setShip(Ship& ship, char coord_y, int coord_x, int ship_ind);

@@ -3,7 +3,7 @@
 #include <ctime>
 
 #include "ship.h"
-#include "ship-manager.h"
+#include "shipManager.h"
 #include "field.h"
 
 #define TERM_GREEN "\033[32m"
@@ -61,8 +61,29 @@ int main() {
     shipAmount++;
 
     try {
-        Ship ship2(len, 'h');
-        playersManager.refresh(ship2);
+        Ship shipErr(5, 'h');
+        playersManager.refresh(shipErr);
+        shipAmount++;
+    } catch (const char* err) {
+        std::cerr << TERM_RED << err << TERM_DEF << std::endl;  // Improper length of ship
+    }
+    try {
+        Ship shipErr(0, 'h');
+        playersManager.refresh(shipErr);
+        shipAmount++;
+    } catch (const char* err) {
+        std::cerr << TERM_RED << err << TERM_DEF << std::endl;  // Improper length of ship
+    }
+    try {
+        Ship shipErr(2, 's');
+        playersManager.refresh(shipErr); // Improper orientation
+        shipAmount++;
+    } catch (const char* err) {
+        std::cerr << TERM_RED << err << TERM_DEF << std::endl;
+    }
+    try {
+        Ship shipErr(len, 'h');
+        playersManager.refresh(shipErr);  // All ships of this length are already in the list
         shipAmount++;
     } catch (const char* err) {
         std::cerr << TERM_RED << err << TERM_DEF << std::endl;
@@ -76,22 +97,22 @@ int main() {
     try { 
         playersField.setShip(ship1, 'c', 8, playersManager.getShipIndex(len)); 
     } catch (const char* err) { 
-        std::cerr << TERM_RED << err << TERM_DEF << std::endl; 
+        std::cerr << TERM_RED << err << TERM_DEF << std::endl; // Coordinations out of field
     }
     playersField.setShip(ship1, 'c', 3, playersManager.getShipIndex(len));
     
     try {
-        playersField.setShip(ship2, 'd', 6, playersManager.getShipIndex(len));
+        playersField.setShip(ship2, 'd', 6, playersManager.getShipIndex(len)); // You can't put a ship right next to another one
     } catch (const char* err) {
         std::cerr << TERM_RED << err << TERM_DEF << std::endl;
     }
     try { 
-        playersField.setShip(ship2, 'j', 10, playersManager.getShipIndex(len)); 
+        playersField.setShip(ship2, 'j', 10, playersManager.getShipIndex(len)); // Coordinates out of field! 
     } catch (const char* err) { 
         std::cerr << TERM_RED << err << TERM_DEF << std::endl; 
     }
     try {
-        playersField.setShip(ship2, 'c', 6, playersManager.getShipIndex(len));
+        playersField.setShip(ship2, 'c', 6, playersManager.getShipIndex(len));  // There's already a ship here! 
     } catch (const char* err) {
         std::cerr << TERM_RED << err << TERM_DEF << std::endl;
     }
@@ -100,25 +121,21 @@ int main() {
     enemyField.shoot('g', 5, enemyManager);
     enemyField.shoot('e', 5, enemyManager);
     enemyField.shoot('i', 3, enemyManager);
+    enemyField.shoot('i', 3, enemyManager);
     try {
         enemyField.shoot('k', 5, enemyManager);
     } catch(const char* err) {
-        std::cerr << TERM_RED << err << TERM_DEF << std::endl;
+        std::cerr << TERM_RED << err << TERM_DEF << std::endl; // Coordinates out of field
     }
     try {
         enemyField.shoot('a', 11, enemyManager);
     } catch(const char* err) {
-        std::cerr << TERM_RED << err << TERM_DEF << std::endl;
+        std::cerr << TERM_RED << err << TERM_DEF << std::endl; // Coordinates out of field
     }
     try {
         enemyField.shoot('i', 3, enemyManager);
     } catch(const char* err) {
-        std::cerr << TERM_RED << err << TERM_DEF << std::endl;
-    }
-    try {
-        enemyField.shoot('i', 3, enemyManager);
-    } catch(const char* err) {
-        std::cerr << TERM_RED << err << TERM_DEF << std::endl;
+        std::cerr << TERM_RED << err << TERM_DEF << std::endl; // You already destroyed the ship segment at these coordinates! 
     }
 
     std::cout << "Your ships: " << std::endl;

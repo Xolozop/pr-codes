@@ -19,7 +19,7 @@ public:
     bool isDestroyed() const;
     int getState(int i) const;
     void printSeg(int i) const;
-    void atack(int num);
+    void atack(int i);
 };
 
 #endif

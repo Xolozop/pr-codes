@@ -19,6 +19,33 @@ Field::Field(int sz, bool isMine) : size{sz}, isMine{isMine} {
 
 Field::~Field() {}
 
+Field::Field(const Field& other) : size(other.size), isMine(other.isMine), fieldBlocks(other.fieldBlocks) { }
+
+Field::Field(Field&& other) : size(other.size), isMine(other.isMine), fieldBlocks(std::move(other.fieldBlocks)) {
+    other.size = 0;
+    other.isMine = false;
+}
+
+Field& Field::operator = (const Field& other) {
+    if (this != &other) {
+        size = other.size;
+        isMine = other.isMine;
+        fieldBlocks = other.fieldBlocks;
+    }
+    return *this;
+}
+
+Field& Field::operator = (Field&& other) {
+    if (this != &other) {
+        size = other.size;
+        isMine = other.isMine;
+        fieldBlocks = std::move(other.fieldBlocks);
+        other.size = 0;
+        other.isMine = 0;
+    }
+    return *this;
+}
+
 bool Field::confirmData() const{
     std::cout << "Do you agree? (enter N to replace ship, Y or ENTER to continue): ";
     char ans = getchar();
@@ -127,7 +154,7 @@ void Field::shoot(char coord_y, int coord_x, shipManager& manager) {
     if (fieldBlocks[x][y] > 0) {
         Ship ship = manager.getShip(fieldBlocks[x][y]/100, (fieldBlocks[x][y]%100)/10);
         if (ship.getState(fieldBlocks[x][y]%10) == segStates::destroyed)
-            throw "You already destroyed ship at these coordinates! ";
+            throw "You already destroyed ship segment at these coordinates! ";
     } else {
         if (fieldBlocks[x][y] == blockStates::shoted)
             throw "You can't shoot at these coordinates! ";

@@ -7,12 +7,15 @@
 #define TERM_GREEN "\033[32m"
 #define TERM_RED "\033[31m"
 
-Ship::Ship(int len, char ori) : length{len} {
+Ship::Ship(int len, char ori) {
+    if ((len < 1) || (len > 4))
+        throw "Improper length of ship!";
+    length = len;
     segments = new segStates[length];
     for (int i = 0; i < length; i++)
         segments[i] = segStates::intact;
     if ((ori != 'h') && (ori != 'v'))
-        throw "Improper orientation! ";
+        throw "Improper orientation!";
     orient = (ori == 'h') ? orientation::horizontal : orientation::vertical;
 }
 
