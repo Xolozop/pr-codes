@@ -18,6 +18,7 @@ public:
     Ship& getShip(int x, int y);
     void printShipList() const;
     bool isAllShipsDestroyed() const;
+    int* getRandomUndamagedShip() const;
 };
 
 #endif

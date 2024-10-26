@@ -1,7 +1,9 @@
 #include <iostream>
-#include <iomanip>
+#include <iomanip> // for setw
+#include <ctime> // for srand(time)
 
 #include "shipManager.h"
+#include "exceptions.h"
 
 #define MAX_SHIP_COUNT 10
 #define TERM_UNDERLINE "\033[4m"
@@ -21,7 +23,7 @@ void shipManager::refresh(Ship ship) {
     if (ships.size() < len)
         ships.resize(len);
     if (ships[len-1].size() >= (5 - len))
-        throw "All ships of this length are already in the list! ";
+        throw shipListIsFullException();
     ships[len-1].push_back(ship);
     amount++;
 }
@@ -60,9 +62,35 @@ void shipManager::printShipList() const {
 bool shipManager::isAllShipsDestroyed() const {
     for (int x = 0; x < ships.size(); x++) {
         for (int y = 0; y < ships[x].size(); y++) {
-            if (!ships[x][y].isDestroyed())
+            if (!ships[x][y].isShipDestroyed())
                 return false;
         }
     }
     return true;
+}
+
+int* shipManager::getRandomUndamagedShip() const {
+    srand(time(0));
+    std::vector<int*> intactShips;
+    for (int x = 0; x < ships.size(); x++) {
+        for (int y = 0; y < ships[x].size(); y++) {
+            if (ships[x][y].hasIntactSegs()) {
+                int* tmp = new int[2];
+                tmp[0] = x;
+                tmp[1] = y;
+                intactShips.push_back(tmp);
+            }
+        }
+    }
+
+    if (intactShips.size() == 0)
+        throw shellingException();
+
+    int i = std::rand()%intactShips.size();
+    int* ret = intactShips[i];
+    for (int j = 0; j < intactShips.size(); j++) {
+        if (j != i)
+            delete intactShips[j];
+    }
+    return ret;
 }

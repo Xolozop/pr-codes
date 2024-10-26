@@ -2,6 +2,7 @@
 #include <climits>
 
 #include "field.h"
+#include "exceptions.h"
 
 #define TERM_DEF "\033[0m"
 #define TERM_UNDERLINE "\033[4m"
@@ -9,7 +10,13 @@
 #define TERM_YELLOW "\033[33m"
 #define TERM_RED_BG "\033[101m"
 
-Field::Field(int sz, bool isMine) : size{sz}, isMine{isMine} {
+int Field::validateSize(int size) {
+    if ((size < 0) || (size > 26))
+        throw incorrectSizeException();
+    return size;
+}
+
+Field::Field(int sz, bool isMine) : size{validateSize(sz)}, isMine{isMine} {
     fieldBlocks.resize(size);
     for (int x = 0; x < size; x++) {
         for (int y = 0; y < size; y++)
@@ -17,7 +24,7 @@ Field::Field(int sz, bool isMine) : size{sz}, isMine{isMine} {
     }
 }
 
-Field::~Field() {}
+Field::~Field() { }
 
 Field::Field(const Field& other) : size(other.size), isMine(other.isMine), fieldBlocks(other.fieldBlocks) { }
 
@@ -46,6 +53,20 @@ Field& Field::operator = (Field&& other) {
     return *this;
 }
 
+int Field::charToCoord(char c) {
+    return (int)c- 96;
+}
+
+void Field::validateCoords(char coord_y, int coord_x) {
+    if (!isalpha(coord_y))
+        throw improperInputException();
+    int x = coord_x - 1;
+    int y = charToCoord(coord_y) - 1;
+
+    if ((x < 0) || (x > size-1) || (y < 0) || (y > size-1))
+        throw outOfFieldException();
+}
+
 bool Field::confirmData() const{
     std::cout << "Do you agree? (enter N to replace ship, Y or ENTER to continue): ";
     char ans = getchar();
@@ -61,16 +82,16 @@ bool Field::confirmData() const{
 void Field::setShip(Ship& ship, char coord_y, int coord_x, int ship_ind) {
     std::vector<std::vector<int>> copyField = fieldBlocks;
 
-    if (!isalpha(coord_y))
-            throw "Incorrect first coordinate! Must be a letter! ";
+    validateCoords(coord_y, coord_x);
+     
     int x = coord_x - 1;
-    int y = (int)coord_y - 96 - 1;
+    int y = charToCoord(coord_y) - 1;
     int len = ship.getLength();
     bool ori = ship.isVertical();
     int max_x = x+len*ori;
     int max_y = y+len*!ori;
     if ((x < 0) || (max_x > size) || (y < 0) || (max_y > size))
-        throw "Coordinates out of field! ";
+        throw outOfFieldException();
 
     int x1, y1;
     // coords for loop
@@ -84,10 +105,8 @@ void Field::setShip(Ship& ship, char coord_y, int coord_x, int ship_ind) {
             copyField[x1+!ori][y1+ori] = blockStates::padding;
 
         if ((i != -1) && (i != len)) {
-            if (fieldBlocks[x1][y1] == blockStates::padding)
-                throw "You can't put a ship right next to another one! ";
-            if (fieldBlocks[x1][y1] > 0)
-                throw "There's already a ship here! ";
+            if (fieldBlocks[x1][y1] == blockStates::padding || fieldBlocks[x1][y1] > 0)
+                throw invalidShipPlacementException();
             copyField[x1][y1] = len*100 + ship_ind*10 + (i+1);
         } else if ((x1 > -1) && (x1 < size) && (y1 > -1) && (y1 < size)) {
             copyField[x1][y1] = blockStates::padding;
@@ -95,7 +114,7 @@ void Field::setShip(Ship& ship, char coord_y, int coord_x, int ship_ind) {
     }
 
     // if (isMine && !getAgreement())
-    //     throw "Please, re-enter your coordinates: ";
+    //     throw reEnterException();
 
     fieldBlocks = copyField;
 
@@ -132,10 +151,10 @@ void Field::printField(bool showPaddings, shipManager& manager) const {
                 default:
                     Ship ship = manager.getShip(fieldBlocks[x][y]/100, (fieldBlocks[x][y]%100)/10);
                     int segState = ship.getState(fieldBlocks[x][y]%10);
-                    if (isMine || segState != segStates::intact) {
-                        ship.printSeg(fieldBlocks[x][y]%10);
-                    } else {
+                    if (!isMine && (segState == segStates::intact || segState == segStates::hideDamage)) {
                         std::cout << (isMine ? '~' : '?');
+                    } else {
+                        ship.printSeg(fieldBlocks[x][y]%10);
                     }
             }
             std::cout << ' ';
@@ -144,20 +163,22 @@ void Field::printField(bool showPaddings, shipManager& manager) const {
     }
 }
 
-void Field::shoot(char coord_y, int coord_x, shipManager& manager) {
-    int x = coord_x - 1;
-    int y = (int)coord_y - 96 - 1;
+int Field::isShip(int y, int x) {
+    return fieldBlocks[x][y] > 0 ? fieldBlocks[x][y] : -1;
+}
 
-    if ((x < 0) || (x > size-1) || (y < 0) || (y > size-1))
-        throw "Coordinates out of field! ";
+void Field::shoot(char coord_y, int coord_x, shipManager& manager) {
+    validateCoords(coord_y, coord_x);
+    int x = coord_x - 1;
+    int y = charToCoord(coord_y) - 1;
 
     if (fieldBlocks[x][y] > 0) {
         Ship ship = manager.getShip(fieldBlocks[x][y]/100, (fieldBlocks[x][y]%100)/10);
         if (ship.getState(fieldBlocks[x][y]%10) == segStates::destroyed)
-            throw "You already destroyed ship segment at these coordinates! ";
+            throw alreadyDestroyedException();
     } else {
         if (fieldBlocks[x][y] == blockStates::shoted)
-            throw "You can't shoot at these coordinates! ";
+            throw alreadyShootedException();
     }
 
     if (!isMine) {
@@ -166,7 +187,7 @@ void Field::shoot(char coord_y, int coord_x, shipManager& manager) {
         printField(false, manager);
         if (!confirmData()) {
             fieldBlocks[x][y] = tmp;
-            throw "Please, re-enter your coordinates: ";
+            throw reEnterException();
         }
         fieldBlocks[x][y] = tmp;
     }
@@ -174,7 +195,7 @@ void Field::shoot(char coord_y, int coord_x, shipManager& manager) {
     if (fieldBlocks[x][y] > 0) {
         Ship& ship = manager.getShip(fieldBlocks[x][y]/100, (fieldBlocks[x][y]%100)/10);
         ship.atack(fieldBlocks[x][y]%10);
-        if (ship.isDestroyed()) {
+        if (ship.isShipDestroyed()) {
             bool ori = ship.isVertical();
             int x1, y1;
             for (int i = -1; i < ship.getLength()+1; i++) {
@@ -199,6 +220,7 @@ void Field::shoot(char coord_y, int coord_x, shipManager& manager) {
             }
         }
     } else {
+        std::cout << "Missed." << std::endl;
         fieldBlocks[x][y] = blockStates::shoted;
     }
 }
