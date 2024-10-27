@@ -151,7 +151,7 @@ int main() {
     while(1) {
         try {
             playersSkills.useLastSkill();
-        } catch(const std::exception& myExc) {
+        } catch(const noSkillsException& myExc) {
             std::cerr << TERM_RED << myExc.what() << TERM_DEF << std::endl; // No skills left!
             break;
         }

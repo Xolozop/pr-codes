@@ -21,7 +21,7 @@ void Skill::getCoordinates() {
 
         try {
             enemyField.validateCoords(y, x);
-        } catch (const std::exception& myExc) {
+        } catch (const outOfFieldException& myExc) {
             throw myExc;
             // coords out of field
         }

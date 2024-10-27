@@ -10,7 +10,14 @@ Scanner::Scanner(Field& field, shipManager& manager) : Skill(field, manager) { }
 
 void Scanner::useSkill() {
     printSkillName();
-    getCoordinates();
+    while(1) {
+        try {
+            getCoordinates();
+            break;
+        } catch (const std::exception& myExc) {
+            std::cerr << TERM_RED << myExc.what() << TERM_DEF;
+        }
+    }
 
     int x = coord_x - 1;
     int y = (int)coord_y - 96 - 1;

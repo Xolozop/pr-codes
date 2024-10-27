@@ -89,6 +89,8 @@ void Ship::atack(int i) {
             }
             isDestroyed = true;
             break;
+        default:
+            throw alreadyDestroyedException();
     }
 }
 
